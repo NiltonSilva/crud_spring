@@ -3,6 +3,8 @@ package med.voll.api.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,8 +33,8 @@ public class MedicoController {
 	}
 	
 	@GetMapping
-	public List<DadosListagemMedico> listar(){
-		return repository.findAll().stream().map(DadosListagemMedico::new).toList();
+	public Page<DadosListagemMedico> listar(Pageable paginacao){
+		return repository.findAll(paginacao).map(DadosListagemMedico::new);
 		// para nao retornar todos os dados que compoem o cadastro do médico eu faço um DTO (DadosListagemMedico) para os parametros que desejo exibir, trago para cá e converto o Médico que recebo pelo Repository em DadosCadastroMédico.
 	}
 }
