@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,8 +40,14 @@ public class MedicoController {
 	@GetMapping
 	public Page<DadosListagemMedico> listar(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao){
 		// por padrão o backend me traz 20 registros e ordenados pela ordem de cadastro no banco de dados. Essa notação @PageableDefault ajuda a configurar quantos registros vem por requisição e se vem ordenado por alguns dos parâmetros. 
-		return repository.findAll(paginacao).map(DadosListagemMedico::new);
+		/*
+			nesta opção de retorno ele retorna todos os médicos, sejam os ativos sejam os inativos. 
+			return repository.findAll(paginacao).map(DadosListagemMedico::new);
+		*/
 		// para nao retornar todos os dados que compoem o cadastro do médico eu faço um DTO (DadosListagemMedico) para os parametros que desejo exibir, trago para cá e converto o Médico que recebo pelo Repository em DadosCadastroMédico.
+		
+		//aqui vou chamar um método que eu criei no meu repository para retornar somente os médicos que estão ativos.
+		return repository.findAllByAtivoTrue(paginacao).map(DadosListagemMedico::new);
 	}
 	
 	@PutMapping
@@ -48,4 +56,17 @@ public class MedicoController {
 		var medico = repository.getReferenceById(dados.id());
 		medico.atualizarInformacoes(dados);
 	}
+	
+	@DeleteMapping("/{id}")
+	@Transactional
+	public void excluir(@PathVariable Long id) {	// @PathVarible é pra informar que o "id" que está como parâmetro é o mesmo que vem da URL 
+		/*
+			repository.deleteById(id);		// dessa forma ele apaga de fato o registro do banco de dados. O ideal é que seja uma 'exclusão lógica', ou seja, só tornar o registro inativo para não aparecer na listagem. Pois apagar o registro de fato do bando de dados pode ocasionar problema, caso ele esteja relacionado a alguma outra tabela.
+		*/
+		
+		var medico = repository.getReferenceById(id);
+		medico.excluir();
+	}
+	
+	
 }
