@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import med.voll.api.endereco.Endereco;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("medicos")
@@ -30,8 +31,13 @@ public class MedicoController {
 
 	@PostMapping
 	@Transactional		// esse eu uso quando for adicionar, excluir ou editar informações do banco de dados
-	public ResponseEntity cadastrar(@RequestBody @Valid DadosCadastroMedico dados) {
-		repository.save(new Medico(dados));
+	public ResponseEntity cadastrar(@RequestBody @Valid DadosCadastroMedico dados, UriComponentsBuilder uriBuilder) {
+		var medico = new Medico(dados);
+		repository.save(medico);
+
+		var uri = uriBuilder.path("/medicos/{id}").buildAndExpand(medico.getId()).toUri();
+
+		return ResponseEntity.created(uri).body(new DadosDetalhamentoMedico(medico));
 	}
 	
 	@GetMapping
@@ -69,6 +75,10 @@ public class MedicoController {
 
 		return ResponseEntity.noContent().build();
 	}
-	
-	
+
+	@GetMapping("/{id}")
+	public ResponseEntity listarPorId(@PathVariable Long id) {	// @PathVarible é pra informar que o "id" que está como parâmetro é o mesmo que vem da URL
+		var medico = repository.getReferenceById(id);
+		return ResponseEntity.ok(new DadosDetalhamentoMedico(medico));
+	}
 }
